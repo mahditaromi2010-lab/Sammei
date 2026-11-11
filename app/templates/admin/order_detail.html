@@ -1,0 +1,67 @@
+{% extends "admin/_base.html" %}
+{% block title %}سفارش {{ order.code }}{% endblock %}
+{% block heading %}سفارش <span class="ltr">{{ order.code }}</span> <span class="badge b-{{ order.status }}" style="font-family:Vazirmatn;font-size:.9rem;vertical-align:middle">{{ order.status_label }}</span>{% endblock %}
+{% block actions %}<a class="btn ghost" href="{{ url_for('admin.order_invoice', code=order.code) }}" target="_blank" rel="noopener">فاکتور / برچسب پستی</a>{% endblock %}
+{% block content %}
+<div class="grid g-side">
+<div class="grid">
+  {% for pay in order.payments %}{% if pay.status in ("submitted",) or (pay.receipt_path and loop.index < 4) %}
+  <div class="card" {% if pay.status == "submitted" %}style="box-shadow:inset 0 0 0 2px var(--pink)"{% endif %}>
+    <h2>{{ icon("copy") }} پرداخت #{{ pay.id|fa }} · {{ "کارت‌به‌کارت" if pay.method == "card_to_card" else "درگاه" }} <span class="badge b-{{ pay.status }}">{{ pay.status_label }}</span></h2>
+    <div class="grid g2">
+      <dl class="kv">
+        <dt>مبلغ سفارش</dt><dd>{{ pay.amount|money }} تومان</dd>
+        <dt>۴ رقم آخر کارت</dt><dd class="ltr">{{ pay.payer_card_last4 or "—" }}</dd>
+        <dt>شماره پیگیری</dt><dd class="ltr">{{ pay.ref_number or "—" }}</dd>
+        <dt>زمان واریز (اعلامی)</dt><dd>{{ pay.paid_at_text or "—" }}</dd>
+        <dt>ثبت</dt><dd>{{ pay.created_at|jdate }}</dd>
+        {% if pay.gateway_ref_id %}<dt>کد مرجع درگاه</dt><dd class="ltr">{{ pay.gateway_ref_id }}</dd>{% endif %}
+        {% if pay.reviewed_by %}<dt>بررسی</dt><dd>{{ pay.reviewed_by }} · {{ pay.reviewed_at|jdate }}</dd>{% endif %}
+        {% if pay.reject_reason %}<dt>دلیل رد</dt><dd>{{ pay.reject_reason }}</dd>{% endif %}
+      </dl>
+      <div class="receipt">{% if pay.receipt_path %}<a href="{{ url_for('admin.receipt', name=pay.receipt_path.removeprefix('receipts/')) }}" target="_blank" rel="noopener"><img src="{{ url_for('admin.receipt', name=pay.receipt_path.removeprefix('receipts/')) }}" alt="رسید پرداخت"></a>{% else %}<p class="muted">رسید ندارد.</p>{% endif %}</div>
+    </div>
+    {% if pay.status == "submitted" %}
+    <p class="muted" style="font-size:.88rem">قبل از تایید، واریز <b>{{ pay.amount|money }} تومان</b> را در صورت‌حساب بانک با شماره پیگیری و ۴ رقم آخر کارت تطبیق بده.</p>
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:flex-start">
+      <form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="payment_id" value="{{ pay.id }}">
+        <button class="btn leaf" name="action" value="approve">{{ icon("check") }} تایید پرداخت</button></form>
+      <form method="post" style="display:flex;gap:.4rem;flex:1;min-width:260px"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="payment_id" value="{{ pay.id }}">
+        <input class="input" name="reason" placeholder="دلیل رد (به مشتری نشان داده می‌شود)"><button class="btn danger" name="action" value="reject">رد</button></form>
+    </div>{% endif %}
+  </div>{% endif %}{% endfor %}
+
+  <div class="card"><h2>{{ icon("box") }} اقلام</h2>
+    <table><thead><tr><th></th><th>کالا</th><th>قیمت</th><th>تعداد</th><th>جمع</th></tr></thead><tbody>
+    {% for it in order.items %}<tr><td><img class="thumb" src="{{ media_url(it.image) }}" alt=""></td>
+      <td>{% if it.product %}<a href="{{ url_for('admin.product_edit', pid=it.product_id) }}">{{ it.title }}</a>{% else %}{{ it.title }}{% endif %}</td>
+      <td>{{ it.price|money }}</td><td>{{ it.qty|fa }}</td><td><b>{{ it.line_total|money }}</b></td></tr>{% endfor %}
+    </tbody></table>
+    <dl class="kv" style="margin-top:1rem;max-width:320px;margin-inline-start:auto">
+      <dt>جمع کالاها</dt><dd>{{ order.subtotal|money }}</dd>
+      {% if order.discount %}<dt>تخفیف ({{ order.coupon_code }})</dt><dd>−{{ order.discount|money }}</dd>{% endif %}
+      <dt>ارسال</dt><dd>{{ order.shipping|money }}</dd><dt>مبلغ نهایی</dt><dd style="font-size:1.2rem">{{ order.total|money }} تومان</dd></dl>
+  </div>
+</div>
+<div class="grid">
+  <div class="card"><h2>{{ icon("truck") }} وضعیت و ارسال</h2>
+    <form method="post" class="grid"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="field"><label for="st">وضعیت سفارش</label><select id="st" name="status">{% for k, l in statuses.items() %}<option value="{{ k }}" {{ 'selected' if order.status == k }}>{{ l }}</option>{% endfor %}</select>
+        <span class="hint">لغو سفارش، موجودی کالاها را برمی‌گرداند.</span></div>
+      <div class="field"><label for="pt">کد رهگیری پست</label><input class="input" id="pt" name="post_tracking" value="{{ order.post_tracking }}" dir="ltr"></div>
+      <button class="btn" name="action" value="status">به‌روزرسانی</button></form>
+  </div>
+  <div class="card"><h2>{{ icon("pin") }} گیرنده</h2><dl class="kv">
+    <dt>نام</dt><dd>{{ order.customer_name }}</dd><dt>موبایل</dt><dd><a class="ltr" href="tel:{{ order.phone }}">{{ order.phone }}</a></dd>
+    {% if order.email %}<dt>ایمیل</dt><dd class="ltr">{{ order.email }}</dd>{% endif %}
+    <dt>استان/شهر</dt><dd>{{ order.province }}، {{ order.city }}</dd><dt>نشانی</dt><dd>{{ order.address }}</dd><dt>کد پستی</dt><dd class="ltr">{{ order.postal_code }}</dd>
+    {% if order.note %}<dt>توضیح مشتری</dt><dd>{{ order.note }}</dd>{% endif %}
+    <dt>ثبت</dt><dd>{{ order.created_at|jdate }}</dd></dl>
+    <p style="margin:.8rem 0 0"><a class="btn ghost sm" href="{{ url_for('shop.order_view', code=order.code, t=order.access_token) }}" target="_blank" rel="noopener">صفحه‌ی مشتری</a></p>
+  </div>
+  <div class="card"><h2>{{ icon("mail") }} یادداشت داخلی</h2>
+    <form method="post" class="grid"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <textarea name="admin_note" aria-label="یادداشت">{{ order.admin_note }}</textarea><button class="btn ghost" name="action" value="note">ذخیره یادداشت</button></form></div>
+</div>
+</div>
+{% endblock %}

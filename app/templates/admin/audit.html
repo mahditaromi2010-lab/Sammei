@@ -1,0 +1,7 @@
+{% extends "admin/_base.html" %}
+{% block title %}گزارش فعالیت{% endblock %}{% block heading %}گزارش فعالیت مدیران{% endblock %}
+{% block content %}
+<div class="table-wrap"><table><thead><tr><th>زمان</th><th>مدیر</th><th>عملیات</th><th>هدف</th><th>جزئیات</th><th>IP</th></tr></thead><tbody>
+{% for r in rows %}<tr><td class="muted">{{ r.created_at|jdate }}</td><td class="ltr">{{ r.admin }}</td><td class="ltr">{{ r.action }}</td><td class="ltr">{{ r.target }}</td><td>{{ r.detail }}</td><td class="ltr muted">{{ r.ip }}</td></tr>
+{% else %}<tr><td colspan="6" class="empty">خالی</td></tr>{% endfor %}</tbody></table></div>
+{% endblock %}

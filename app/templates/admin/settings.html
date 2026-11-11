@@ -1,0 +1,33 @@
+{% extends "admin/_base.html" %}
+{% set titles = {"general":"اطلاعات فروشگاه","payment":"پرداخت و درگاه","shipping":"ارسال"} %}
+{% set labels = {"site_name":"نام لاتین (لوگو)","site_name_fa":"نام فارسی","tagline":"شعار کوتاه","hero_title":"تیتر صفحه اصلی (با «،» دو خط می‌شود)","hero_subtitle":"زیرتیتر صفحه اصلی",
+ "about_title":"عنوان درباره ما","about_text":"متن درباره ما","handmade_note":"یادداشت دست‌ساز بودن","phone":"تلفن","email":"ایمیل","instagram":"آیدی اینستاگرام","telegram":"آیدی تلگرام","address":"نشانی",
+ "card_to_card_enabled":"کارت‌به‌کارت فعال باشد","card_number":"شماره کارت (۱۶ رقم)","card_holder":"نام صاحب کارت","card_bank":"نام بانک","sheba":"شماره شبا (اختیاری)","card_instructions":"راهنمای پرداخت برای مشتری",
+ "gateway_enabled":"درگاه آنلاین فعال باشد","shipping_fee":"هزینه ارسال (تومان)","free_shipping_over":"ارسال رایگان برای خرید بالای (تومان، ۰ = هرگز)","processing_days":"زمان آماده‌سازی"} %}
+{% block title %}{{ titles[group] }}{% endblock %}{% block heading %}{{ titles[group] }}{% endblock %}
+{% block content %}
+<form method="post" class="grid g-side"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="card"><div class="fg">
+{% for k in keys %}
+  {% if k in ("card_to_card_enabled","gateway_enabled") %}
+  <label class="check full"><input type="checkbox" name="{{ k }}" value="1" {{ 'checked' if s[k] == '1' }} {{ 'disabled' if k == 'gateway_enabled' and not gateway_ready }}> {{ labels[k] }}</label>
+  {% elif k in ("about_text","card_instructions","hero_subtitle","handmade_note") %}
+  <div class="field full"><label for="{{ k }}">{{ labels[k] }}</label><textarea id="{{ k }}" name="{{ k }}">{{ s[k] }}</textarea></div>
+  {% else %}
+  <div class="field{{ ' full' if k in ('address','tagline','hero_title') }}"><label for="{{ k }}">{{ labels[k] }}</label><input class="input" id="{{ k }}" name="{{ k }}" value="{{ s[k] }}" {{ 'dir=ltr' if k in ('card_number','sheba','email','instagram','telegram','phone','site_name','shipping_fee','free_shipping_over') }}></div>
+  {% endif %}
+{% endfor %}
+</div><p><button class="btn leaf">ذخیره تنظیمات</button></p></div>
+<div class="grid">
+{% if group == "payment" %}
+  <div class="card"><h2>{{ icon("check-circle") }} وضعیت پرداخت</h2>
+    <p>کارت‌به‌کارت: {% if s.card_number and s.card_to_card_enabled == '1' %}<span class="badge b-approved">فعال</span>{% else %}<span class="badge b-rejected">غیرفعال</span>{% endif %}</p>
+    <p>درگاه زرین‌پال: {% if gateway_ready %}<span class="badge b-submitted">آماده {{ "(سندباکس)" if sandbox else "(واقعی)" }}</span>{% else %}<span class="badge">تنظیم نشده</span>{% endif %}</p>
+    <p class="muted" style="font-size:.88rem">برای فعال‌کردن درگاه، روی سرور در فایل <span class="ltr">.env</span> مقدارهای <span class="ltr">ZARINPAL_MERCHANT_ID</span> و <span class="ltr">PUBLIC_BASE_URL</span> را بگذار، اول با <span class="ltr">ZARINPAL_SANDBOX=1</span> تست کن، بعد این تیک را بزن. کد درگاه از قبل نوشته شده و فقط منتظر مرچنت است.</p></div>
+  <div class="card"><h2>{{ icon("alert") }} نکته امنیتی</h2><p class="muted" style="font-size:.88rem;margin:0">تایید هر رسید را فقط بعد از دیدن واریز در اپ بانک انجام بده؛ عکس رسید به‌تنهایی قابل جعل است.</p></div>
+{% else %}
+  <div class="card"><h2>{{ icon("sparkle") }} راهنما</h2><p class="muted" style="margin:0">تغییرات بلافاصله در سایت دیده می‌شوند.</p></div>
+{% endif %}
+</div>
+</form>
+{% endblock %}

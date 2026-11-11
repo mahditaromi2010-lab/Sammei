@@ -1,0 +1,40 @@
+{% from "_icons.html" import icon %}<!doctype html>
+<html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>{% block title %}پنل مدیریت{% endblock %} | {{ S.site_name_fa }}</title>
+<link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}"><link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}?v=1"></head>
+<body>
+{% set ep = request.endpoint or "" %}
+<div class="layout">
+<aside class="side" id="side">
+  <a class="brand" href="{{ url_for('admin.dashboard') }}"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt=""><div>{{ S.site_name_fa }}<small>پنل مدیریت</small></div></a>
+  <nav>
+    <a href="{{ url_for('admin.dashboard') }}" class="{{ 'on' if ep == 'admin.dashboard' }}">{{ icon("sparkle") }} داشبورد</a>
+    <span class="group">فروش</span>
+    <a href="{{ url_for('admin.orders_list') }}" class="{{ 'on' if ep.startswith('admin.order') }}">{{ icon("box") }} سفارش‌ها{% if nav_review %}<span class="pill">{{ nav_review|fa }}</span>{% endif %}</a>
+    <a href="{{ url_for('admin.orders_list', status='payment_review') }}">{{ icon("check-circle") }} بررسی پرداخت‌ها</a>
+    <a href="{{ url_for('admin.coupons') }}" class="{{ 'on' if ep == 'admin.coupons' }}">{{ icon("gift") }} کدهای تخفیف</a>
+    <span class="group">کاتالوگ</span>
+    <a href="{{ url_for('admin.products') }}" class="{{ 'on' if ep in ('admin.products','admin.product_edit') }}">{{ icon("yarn") }} محصولات</a>
+    <a href="{{ url_for('admin.product_new') }}" class="{{ 'on' if ep == 'admin.product_new' }}">{{ icon("plus-cart") }} افزودن محصول</a>
+    <a href="{{ url_for('admin.categories') }}" class="{{ 'on' if ep == 'admin.categories' }}">{{ icon("leaf") }} دسته‌بندی‌ها</a>
+    <span class="group">ارتباط</span>
+    <a href="{{ url_for('admin.messages') }}" class="{{ 'on' if ep == 'admin.messages' }}">{{ icon("mail") }} پیام‌ها و خبرنامه{% if nav_msgs %}<span class="pill">{{ nav_msgs|fa }}</span>{% endif %}</a>
+    <span class="group">تنظیمات</span>
+    <a href="{{ url_for('admin.settings_page', group='payment') }}" class="{{ 'on' if request.view_args and request.view_args.get('group') == 'payment' }}">{{ icon("copy") }} پرداخت و درگاه</a>
+    <a href="{{ url_for('admin.settings_page', group='shipping') }}" class="{{ 'on' if request.view_args and request.view_args.get('group') == 'shipping' }}">{{ icon("truck") }} ارسال</a>
+    <a href="{{ url_for('admin.settings_page', group='general') }}" class="{{ 'on' if request.view_args and request.view_args.get('group') == 'general' }}">{{ icon("brush") }} اطلاعات فروشگاه</a>
+    <a href="{{ url_for('admin.account') }}" class="{{ 'on' if ep == 'admin.account' }}">{{ icon("heart") }} حساب و مدیران</a>
+    <a href="{{ url_for('admin.audit_log') }}" class="{{ 'on' if ep == 'admin.audit_log' }}">{{ icon("clock") }} گزارش فعالیت</a>
+    <a href="{{ url_for('shop.home') }}" target="_blank" rel="noopener">{{ icon("chev") }} مشاهده سایت</a>
+    <form method="post" action="{{ url_for('admin.logout') }}" style="margin-top:.8rem"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn ghost sm" style="width:100%">خروج</button></form>
+  </nav>
+</aside>
+<main class="main">
+  <div class="topbar"><button class="btn ghost sm menu-toggle" type="button" data-toggle="side" aria-label="منو">{{ icon("menu") }}</button>
+    <h1>{% block heading %}{% endblock %}</h1><span class="sp"></span>{% block actions %}{% endblock %}</div>
+  {% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}<div class="flashes" role="status">{% for c, m in messages %}<div class="flash {{ c }}">{{ m }}</div>{% endfor %}</div>{% endif %}{% endwith %}
+  {% block content %}{% endblock %}
+</main>
+</div>
+<script src="{{ url_for('static', filename='js/admin.js') }}?v=1" defer></script>
+</body></html>

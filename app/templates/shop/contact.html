@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}تماس | {{ S.site_name_fa }}{% endblock %}
+{% block content %}
+{% set page_title = "با ما در تماس باش" %}{% set page_sub = "سوال، سفارش ساخت یا فقط یک سلام" %}{% set crumbs = [("تماس", None)] %}
+{% include "shop/_page_hero.html" %}
+<div class="wrap two-col">
+  <form class="panel" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="hp"><label>وب‌سایت<input name="website" tabindex="-1" autocomplete="off"></label></div>
+    <div class="form-grid">
+      <div class="field"><label for="cn">نام</label><input class="input" id="cn" name="name" required maxlength="120" autocomplete="name"></div>
+      <div class="field"><label for="cc">موبایل یا ایمیل</label><input class="input" id="cc" name="contact" required maxlength="160"></div>
+      <div class="field full"><label for="cb">پیام</label><textarea class="input" id="cb" name="body" required maxlength="3000"></textarea></div>
+    </div>
+    <button class="btn btn-night" type="submit" style="margin-top:1rem">{{ icon("mail") }} ارسال پیام</button>
+  </form>
+  <aside class="panel">
+    <h2>راه‌های ارتباطی</h2>
+    <ul class="contact-list">
+      {% if S.phone %}<li>{{ icon("phone") }}<a href="tel:{{ S.phone }}" class="ltr">{{ S.phone|fa }}</a></li>{% endif %}
+      {% if S.email %}<li>{{ icon("mail") }}<a href="mailto:{{ S.email }}" class="latin">{{ S.email }}</a></li>{% endif %}
+      {% if S.instagram %}<li>{{ icon("instagram") }}<a href="https://instagram.com/{{ S.instagram.lstrip('@') }}" class="latin" rel="noopener" target="_blank">@{{ S.instagram.lstrip('@') }}</a></li>{% endif %}
+      {% if S.telegram %}<li>{{ icon("telegram") }}<a href="https://t.me/{{ S.telegram.lstrip('@') }}" class="latin" rel="noopener" target="_blank">@{{ S.telegram.lstrip('@') }}</a></li>{% endif %}
+      {% if S.address %}<li>{{ icon("pin") }}{{ S.address }}</li>{% endif %}
+    </ul>
+    <p class="note">{{ icon("yarn") }}<span>برای سفارش ساخت، اگر عکس نمونه داری لینکش را در پیام بگذار.</span></p>
+  </aside>
+</div>
+{% endblock %}

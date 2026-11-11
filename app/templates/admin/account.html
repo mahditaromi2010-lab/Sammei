@@ -1,0 +1,33 @@
+{% extends "admin/_base.html" %}
+{% block title %}حساب{% endblock %}{% block heading %}حساب و مدیران{% endblock %}
+{% block content %}
+<div class="grid g2">
+<form class="card" method="post"><h2>{{ icon("heart") }} تغییر رمز</h2><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="grid"><div class="field"><label for="cur">رمز فعلی</label><input class="input" type="password" id="cur" name="current" autocomplete="current-password" required></div>
+  <div class="field"><label for="nw">رمز جدید (حداقل ۱۰ کاراکتر)</label><input class="input" type="password" id="nw" name="new" autocomplete="new-password" required></div>
+  <div class="field"><label for="rp">تکرار رمز جدید</label><input class="input" type="password" id="rp" name="repeat" autocomplete="new-password" required></div>
+  <button class="btn" name="action" value="password">تغییر رمز</button></div></form>
+
+<div class="card"><h2>{{ icon("check-circle") }} ورود دومرحله‌ای</h2>
+  {% if me.totp_secret %}<p><span class="badge b-approved">فعال است</span></p>
+  <form method="post" class="grid"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><div class="field"><label for="dc">رمز فعلی برای خاموش‌کردن</label><input class="input" type="password" id="dc" name="current"></div><button class="btn ghost" name="action" value="totp_disable">خاموش کن</button></form>
+  {% elif pending_secret %}
+  <p>در Google Authenticator یا هر اپ مشابه، «افزودن با کلید» را بزن و این کلید را وارد کن:</p>
+  <p class="ltr" style="font-weight:800;letter-spacing:.1em;background:var(--lav-50);padding:.6rem;border-radius:10px;word-break:break-all">{{ pending_secret }}</p>
+  <p class="muted ltr" style="font-size:.75rem;word-break:break-all">{{ uri }}</p>
+  <form method="post" class="grid"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="secret" value="{{ pending_secret }}">
+    <div class="field"><label for="tc">کد ۶ رقمی اپ</label><input class="input" id="tc" name="code" inputmode="numeric" maxlength="6" dir="ltr" required></div><button class="btn leaf" name="action" value="totp_confirm">فعال کن</button></form>
+  {% else %}<p class="muted">با فعال‌کردن، علاوه بر رمز یک کد ۶ رقمی هم لازم است.</p>
+  <form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn lav" name="action" value="totp_start">شروع فعال‌سازی</button></form>{% endif %}
+</div>
+
+<div class="card"><h2>{{ icon("sparkle") }} مدیران</h2>
+  <table><tbody>{% for a in admins %}<tr><td class="ltr"><b>{{ a.username }}</b></td><td>{% if a.is_active %}<span class="on-off">فعال</span>{% else %}<span class="off">غیرفعال</span>{% endif %}{% if a.totp_secret %} · ۲FA{% endif %}</td>
+  <td class="muted">{{ a.last_login|jdate if a.last_login else "—" }}</td><td>{% if a.id != me.id %}<form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ a.id }}"><button class="btn sm ghost" name="action" value="toggle_admin">{{ "غیرفعال کن" if a.is_active else "فعال کن" }}</button></form>{% endif %}</td></tr>{% endfor %}</tbody></table>
+</div>
+<form class="card" method="post"><h2>{{ icon("plus-cart") }} مدیر جدید</h2><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="grid"><div class="field"><label for="nu">نام کاربری</label><input class="input" id="nu" name="username" dir="ltr" required></div>
+  <div class="field"><label for="np">رمز (حداقل ۱۰)</label><input class="input" id="np" name="password" type="password" autocomplete="new-password" required></div>
+  <button class="btn pink" name="action" value="add_admin">ساخت مدیر</button></div></form>
+</div>
+{% endblock %}

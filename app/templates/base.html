@@ -1,0 +1,100 @@
+{% from "_icons.html" import icon %}<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}{{ S.site_name_fa }} | {{ S.tagline }}{% endblock %}</title>
+  <meta name="description" content="{% block description %}{{ S.hero_subtitle }}{% endblock %}">
+  <meta name="theme-color" content="#0A1F44">
+  <link rel="icon" href="{{ url_for('static', filename='img/favicon.svg') }}" type="image/svg+xml">
+  <link rel="preload" href="{{ url_for('static', filename='fonts/vazirmatn-wght.woff2') }}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/site.css') }}?v=1">
+  <meta property="og:site_name" content="{{ S.site_name_fa }}">
+  <meta property="og:title" content="{{ self.title() }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+<a class="skip" href="#main">رفتن به محتوا</a>
+{% set ep = request.endpoint or "" %}
+<header class="site-head wrap">
+  <div class="head-bar">
+    <a class="brand" href="{{ url_for('shop.home') }}" aria-label="{{ S.site_name }} - صفحه اصلی">
+      <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="" width="46" height="46">
+      <b>{{ S.site_name }}</b>{{ icon("heart", "heart") }}
+    </a>
+    <nav class="nav" id="nav" aria-label="منوی اصلی">
+      <a href="{{ url_for('shop.home') }}" {% if ep == 'shop.home' %}aria-current="page"{% endif %}>خانه</a>
+      <a href="{{ url_for('shop.catalog') }}" {% if ep in ('shop.catalog','shop.product') %}aria-current="page"{% endif %}>فروشگاه</a>
+      <a href="{{ url_for('shop.gallery') }}" {% if ep == 'shop.gallery' %}aria-current="page"{% endif %}>گالری نقاشی</a>
+      <a href="{{ url_for('shop.about') }}" {% if ep == 'shop.about' %}aria-current="page"{% endif %}>درباره ما</a>
+      <a href="{{ url_for('shop.contact') }}" {% if ep == 'shop.contact' %}aria-current="page"{% endif %}>تماس</a>
+      <a href="{{ url_for('shop.track') }}" {% if ep == 'shop.track' %}aria-current="page"{% endif %}>پیگیری سفارش</a>
+    </nav>
+    <div class="head-actions">
+      <button class="icon-btn" type="button" data-toggle="search" aria-label="جستجو" aria-expanded="false">{{ icon("search") }}</button>
+      <a class="icon-btn" href="{{ url_for('shop.cart') }}" aria-label="سبد خرید، {{ cart_count|fa }} کالا">{{ icon("cart") }}
+        {% if cart_count %}<span class="badge-count">{{ cart_count|fa }}</span>{% endif %}</a>
+      <button class="icon-btn menu-btn" type="button" data-toggle="nav" aria-label="منو" aria-expanded="false" aria-controls="nav">{{ icon("menu") }}</button>
+    </div>
+  </div>
+  <div class="search-pop" id="search">
+    <form action="{{ url_for('shop.catalog') }}" role="search">
+      <label class="sr-only" for="sq">جستجو در محصولات</label>
+      <input class="input" id="sq" name="q" placeholder="دنبال چه عروسکی می‌گردی؟ مثلاً خرگوش" value="{{ request.args.get('q','') }}">
+      <button class="btn btn-night" type="submit">{{ icon("search") }} جستجو</button>
+    </form>
+  </div>
+</header>
+
+{% with messages = get_flashed_messages(with_categories=true) %}{% if messages %}
+<div class="flashes" role="status">{% for cat, m in messages %}
+  <div class="flash {{ cat }}">{{ icon("check-circle" if cat == "success" else "alert") }}<span>{{ m }}</span>
+    <button type="button" data-dismiss aria-label="بستن">{{ icon("x") }}</button></div>{% endfor %}
+</div>{% endif %}{% endwith %}
+
+<main id="main">{% block content %}{% endblock %}</main>
+
+<footer class="foot">
+  <img class="yarn-ball" src="{{ url_for('static', filename='img/logo.svg') }}" alt="" width="90" height="90" loading="lazy">
+  <div class="night">
+    <span class="stars"></span>
+    <div class="wrap foot-grid">
+      <div>
+        <a class="brand" href="{{ url_for('shop.home') }}"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt="" width="46" height="46"><b>{{ S.site_name }}</b></a>
+        <p>{{ S.tagline }}؛ شادی دست‌ساز، در هر بخیه.</p>
+      </div>
+      <div>
+        <h4>دسترسی سریع</h4>
+        <ul>
+          <li><a href="{{ url_for('shop.catalog') }}">همه محصولات</a></li>
+          <li><a href="{{ url_for('shop.gallery') }}">گالری نقاشی</a></li>
+          <li><a href="{{ url_for('shop.track') }}">پیگیری سفارش</a></li>
+          <li><a href="{{ url_for('shop.about') }}#faq">سوالات متداول</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>ارتباط با ما</h4>
+        <ul>
+          {% if S.phone %}<li><a href="tel:{{ S.phone }}"><span class="ltr">{{ S.phone|fa }}</span></a></li>{% endif %}
+          {% if S.email %}<li><a href="mailto:{{ S.email }}" class="latin">{{ S.email }}</a></li>{% endif %}
+          {% if S.address %}<li>{{ S.address }}</li>{% endif %}
+          <li><a href="{{ url_for('shop.contact') }}">فرم تماس</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>ما را دنبال کن</h4>
+        <div class="socials">
+          {% if S.instagram %}<a href="https://instagram.com/{{ S.instagram.lstrip('@') }}" rel="noopener" target="_blank" aria-label="اینستاگرام">{{ icon("instagram") }}</a>{% endif %}
+          {% if S.telegram %}<a href="https://t.me/{{ S.telegram.lstrip('@') }}" rel="noopener" target="_blank" aria-label="تلگرام">{{ icon("telegram") }}</a>{% endif %}
+          <a href="{{ url_for('shop.contact') }}" aria-label="ایمیل و تماس">{{ icon("mail") }}</a>
+        </div>
+        <p>{{ icon("truck") }} ارسال به سراسر ایران</p>
+      </div>
+    </div>
+    <div class="wrap copy">© {{ S.site_name_fa }}؛ همه‌ی کارها دست‌ساز و اصل هستند.</div>
+  </div>
+</footer>
+<script src="{{ url_for('static', filename='js/site.js') }}?v=1" defer></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

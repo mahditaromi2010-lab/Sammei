@@ -1,0 +1,32 @@
+{% extends "admin/_base.html" %}
+{% block heading %}داشبورد{% endblock %}
+{% block actions %}<a class="btn pink" href="{{ url_for('admin.product_new') }}">{{ icon("plus-cart") }} محصول جدید</a>{% endblock %}
+{% block content %}
+{% if setup_missing %}<div class="warn" style="margin-bottom:1rem">{{ icon("alert") }} شماره کارت فروشگاه هنوز ثبت نشده؛ تا ثبت نشود، مشتری نمی‌تواند پرداخت کند. <a class="btn sm" href="{{ url_for('admin.settings_page', group='payment') }}">ثبت شماره کارت</a></div>{% endif %}
+<div class="grid g4">
+  <a class="card stat{{ ' alert' if stats.review }}" href="{{ url_for('admin.orders_list', status='payment_review') }}"><span>رسیدهای منتظر تایید</span><b>{{ stats.review|fa }}</b></a>
+  <a class="card stat" href="{{ url_for('admin.orders_list', status='paid') }}"><span>آماده‌ی ارسال</span><b>{{ stats.to_ship|fa }}</b></a>
+  <a class="card stat" href="{{ url_for('admin.orders_list', status='awaiting_payment') }}"><span>در انتظار پرداخت</span><b>{{ stats.awaiting|fa }}</b></a>
+  <div class="card stat"><span>فروش ۳۰ روز اخیر</span><b>{{ stats.revenue_30d|money }} <small class="muted" style="font-size:.8rem">تومان</small></b></div>
+</div>
+<div class="grid g-side" style="margin-top:1.2rem">
+  <div class="card">
+    <h2>{{ icon("sparkle") }} فروش ۱۴ روز اخیر (پرداخت‌شده)</h2>
+    <div class="bars">{% for d in days %}<div style="height:{{ (d.total * 100 // peak) if d.total else 2 }}%" data-tip="{{ d.date|jdate(False) }}: {{ d.total|money }}"></div>{% endfor %}</div>
+    <h2 style="margin-top:1.5rem">{{ icon("box") }} آخرین سفارش‌ها</h2>
+    <div style="overflow-x:auto"><table><thead><tr><th>کد</th><th>مشتری</th><th>مبلغ</th><th>وضعیت</th><th>تاریخ</th></tr></thead><tbody>
+    {% for o in recent %}<tr><td><a class="ltr" href="{{ url_for('admin.order_detail', code=o.code) }}"><b>{{ o.code }}</b></a></td><td>{{ o.customer_name }}</td><td>{{ o.total|money }}</td>
+      <td><span class="badge b-{{ o.status }}">{{ o.status_label }}</span></td><td class="muted">{{ o.created_at|jdate }}</td></tr>
+    {% else %}<tr><td colspan="5" class="empty">هنوز سفارشی ثبت نشده.</td></tr>{% endfor %}</tbody></table></div>
+  </div>
+  <div class="grid">
+    <div class="card"><h2>{{ icon("alert") }} موجودی کم</h2>
+      {% for p in low_stock %}<a href="{{ url_for('admin.product_edit', pid=p.id) }}" style="display:flex;gap:.6rem;align-items:center;padding:.35rem 0">
+        <img class="thumb" src="{{ media_url(p.main_image.path_sm if p.main_image else None) }}" alt=""><span style="flex:1">{{ p.title }}</span><span class="badge{{ ' b-rejected' if p.stock == 0 }}">{{ p.stock|fa }}</span></a>
+      {% else %}<p class="muted">همه‌چیز موجود است.</p>{% endfor %}</div>
+    <div class="card"><h2>{{ icon("heart") }} خلاصه</h2><dl class="kv">
+      <dt>محصولات فعال</dt><dd>{{ stats.products|fa }}</dd><dt>سفارش ۲۴ ساعت</dt><dd>{{ stats.orders_24h|fa }}</dd>
+      <dt>کل فروش</dt><dd>{{ stats.revenue_all|money }} تومان</dd><dt>پیام خوانده‌نشده</dt><dd>{{ stats.messages|fa }}</dd></dl></div>
+  </div>
+</div>
+{% endblock %}

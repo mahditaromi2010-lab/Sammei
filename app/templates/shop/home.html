@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon, sec_head, product_card, art_card, stitch %}
+{% block content %}
+<section class="night hero">
+  <span class="stars"></span>
+  <span class="sparkle" style="top:22%;inset-inline-start:46%">{{ icon("sparkle") }}</span>
+  <span class="sparkle" style="top:70%;inset-inline-start:52%;animation-delay:-2s">{{ icon("sparkle") }}</span>
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <h1>{{ S.hero_title.split('،')[0] }}{% if '،' in S.hero_title %}،<br><em>{{ S.hero_title.split('،',1)[1].strip() }} {{ icon("heart") }}</em>{% endif %}</h1>
+      <p>{{ S.hero_subtitle }}</p>
+      <div class="hero-cta">
+        <a class="btn" href="{{ url_for('shop.catalog') }}">دیدن فروشگاه {{ icon("chev") }}</a>
+        <a class="btn btn-ghost" href="{{ url_for('shop.gallery') }}">{{ icon("brush") }} گالری نقاشی‌ها</a>
+      </div>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <span class="moon"></span>
+      <div class="arch"><img src="{{ url_for('static', filename='img/hero.webp') }}" alt="" width="492" height="900" fetchpriority="high"></div>
+      {% for p in paintings[:2] %}
+      <a class="polaroid p{{ loop.index }}" href="{{ url_for('shop.product', slug=p.slug) }}" tabindex="-1">
+        <img src="{{ media_url(p.main_image.path_sm if p.main_image else None) }}" alt="" width="150" height="150"></a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<div class="wrap">
+  <div class="perks" role="list">
+    <div class="perk" role="listitem">{{ icon("heart") }} صد درصد دست‌ساز</div>
+    <div class="perk" role="listitem">{{ icon("gift") }} هدیه‌ای به‌یادماندنی</div>
+    <div class="perk" role="listitem">{{ icon("truck") }} ارسال به سراسر ایران</div>
+    <div class="perk" role="listitem">{{ icon("leaf") }} کاموای ضدحساسیت</div>
+  </div>
+</div>
+
+<section class="section wrap" aria-labelledby="col">
+  {{ sec_head("مجموعه‌ی دست‌ساز ما", "کارهای کوچک، شادی‌های بزرگ") }}
+  <nav class="chips reveal" aria-label="دسته‌بندی‌ها" style="margin-bottom:1.8rem">
+    {% for c in categories %}<a class="chip" href="{{ url_for('shop.catalog', cat=c.slug) }}">{{ c.name }}</a>{% endfor %}
+  </nav>
+  <div class="grid">{% for p in featured %}{{ product_card(p) }}{% endfor %}</div>
+  <div class="sec-foot"><a class="btn btn-night" href="{{ url_for('shop.catalog') }}">همه‌ی محصولات {{ icon("chev") }}</a></div>
+</section>
+
+<section class="section wrap">
+  <div class="story reveal">
+    <div class="night">
+      <img class="story-bg" src="{{ url_for('static', filename='img/story.webp') }}" alt="" loading="lazy">
+      <span class="stars"></span>
+      <h2>{{ S.about_title }} {{ icon("heart") }}</h2>
+      <p>{{ S.about_text }}</p>
+      <div><a class="btn" href="{{ url_for('shop.about') }}">بیشتر بخوان {{ icon("chev") }}</a></div>
+    </div>
+    <div class="strip">
+      <h3>گالری ما</h3>
+      <div class="scroller" tabindex="0" aria-label="نمونه‌کارها">
+        {% for p in (paintings[2:] + newest)[:10] %}
+        <a href="{{ url_for('shop.product', slug=p.slug) }}"><img src="{{ media_url(p.main_image.path_sm if p.main_image else None) }}" alt="{{ p.title }}" loading="lazy"></a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section wrap" aria-labelledby="art">
+  {{ sec_head("تابلوهای شب و رویا", "نقاشی‌های اکریلیک اصل، هرکدام فقط یک نسخه") }}
+  <div class="grid-art">{% for p in paintings[:4] %}{{ art_card(p) }}{% endfor %}</div>
+  <div class="sec-foot"><a class="btn btn-lav" href="{{ url_for('shop.gallery') }}">{{ icon("brush") }} دیدن همه‌ی نقاشی‌ها</a></div>
+</section>
+
+<section class="section wrap">
+  {{ sec_head("تازه از روی قلاب", "جدیدترین عروسک‌ها و ست‌ها") }}
+  <div class="grid">{% for p in newest[:4] %}{{ product_card(p) }}{% endfor %}</div>
+  <div class="note reveal">{{ icon("sparkle") }}<span>{{ S.handmade_note }}</span></div>
+</section>
+
+<div class="wrap">
+  <div class="newsletter reveal">
+    {{ icon("mail") }}
+    <div><b>به دنیای کوچک دست‌ساز ما بپیوند</b><span>از کارهای تازه و تخفیف‌ها زودتر باخبر شو</span></div>
+    <form method="post" action="{{ url_for('shop.newsletter') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label class="sr-only" for="nl">ایمیل یا موبایل</label>
+      <input class="input" id="nl" name="contact" placeholder="ایمیل یا شماره موبایل" required>
+      <button class="btn btn-leaf" type="submit">عضویت</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,14 @@
+<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>ورود مدیر</title><link rel="stylesheet" href="{{ url_for('static', filename='css/admin.css') }}"></head>
+<body class="login"><form class="card" method="post" autocomplete="on">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <img src="{{ url_for('static', filename='img/logo.svg') }}" alt="" width="64" style="margin:0 auto;display:block">
+  <h1>ورود به پنل {{ S.site_name_fa }}</h1>
+  {% if error %}<div class="flash error" role="alert" style="margin-bottom:1rem">{{ error }}</div>{% endif %}
+  <div class="grid">
+    <div class="field"><label for="u">نام کاربری</label><input class="input" id="u" name="username" required autocomplete="username" dir="ltr"></div>
+    <div class="field"><label for="p">رمز عبور</label><input class="input" id="p" name="password" type="password" required autocomplete="current-password" dir="ltr"></div>
+    <div class="field"><label for="c">کد ورود دومرحله‌ای</label><input class="input" id="c" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" dir="ltr"><span class="hint">اگر فعال نکرده‌ای، خالی بگذار.</span></div>
+    <button class="btn pink" type="submit" style="justify-content:center;min-height:46px">ورود</button>
+  </div>
+</form></body></html>

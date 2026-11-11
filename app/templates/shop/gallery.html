@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% from "_icons.html" import art_card %}
+{% block title %}گالری نقاشی | {{ S.site_name_fa }}{% endblock %}
+{% block content %}
+{% set page_title = "گالری نقاشی" %}{% set page_sub = "شب‌های آبی، ماه‌های بزرگ و دخترهایی که به آسمان نگاه می‌کنند" %}{% set crumbs = [("گالری", None)] %}
+{% include "shop/_page_hero.html" %}
+<div class="wrap section"><div class="grid-art">{% for p in items %}{{ art_card(p) }}{% endfor %}</div></div>
+{% endblock %}

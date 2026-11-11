@@ -1,0 +1,17 @@
+{% extends "admin/_base.html" %}
+{% block title %}سفارش‌ها{% endblock %}{% block heading %}سفارش‌ها{% endblock %}
+{% block actions %}<a class="btn ghost" href="{{ url_for('admin.orders_export') }}">خروجی اکسل (CSV)</a>
+<form method="post" action="{{ url_for('admin.orders_expire') }}" data-confirm="سفارش‌هایی که در مهلت رسید نداده‌اند لغو و موجودی‌شان آزاد شود؟"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn ghost">لغو سفارش‌های پرداخت‌نشده‌ی قدیمی</button></form>{% endblock %}
+{% block content %}
+<nav class="tabs"><a href="{{ url_for('admin.orders_list') }}" class="{{ 'on' if not status }}">همه</a>
+{% for k, l in statuses.items() %}<a href="{{ url_for('admin.orders_list', status=k) }}" class="{{ 'on' if status == k }}">{{ l }} ({{ (counts.get(k, 0))|fa }})</a>{% endfor %}</nav>
+<form class="filters">{% if status %}<input type="hidden" name="status" value="{{ status }}">{% endif %}<input class="input" name="q" value="{{ q }}" placeholder="کد سفارش، موبایل یا نام"><button class="btn ghost">جستجو</button></form>
+<div class="table-wrap"><table><thead><tr><th>کد</th><th>مشتری</th><th>موبایل</th><th>اقلام</th><th>مبلغ</th><th>پرداخت</th><th>وضعیت</th><th>تاریخ</th></tr></thead><tbody>
+{% for o in pager.items %}{% set pay = o.latest_payment %}
+<tr><td><a class="ltr" href="{{ url_for('admin.order_detail', code=o.code) }}"><b>{{ o.code }}</b></a></td><td>{{ o.customer_name }}</td><td class="ltr">{{ o.phone }}</td>
+<td class="muted">{{ o.items|sum(attribute='qty')|fa }} کالا</td><td><b>{{ o.total|money }}</b></td>
+<td>{% if pay %}<span class="badge b-{{ pay.status }}">{{ pay.status_label }}</span>{% endif %}</td>
+<td><span class="badge b-{{ o.status }}">{{ o.status_label }}</span></td><td class="muted">{{ o.created_at|jdate }}</td></tr>
+{% else %}<tr><td colspan="8" class="empty">سفارشی پیدا نشد.</td></tr>{% endfor %}</tbody></table></div>
+{% if pager.pages > 1 %}<nav class="pager">{% for n in pager.iter_pages() %}{% if n %}{% if n == pager.page %}<span class="on">{{ n|fa }}</span>{% else %}<a href="{{ url_for('admin.orders_list', page=n, status=status or None, q=q or None) }}">{{ n|fa }}</a>{% endif %}{% else %}<span>…</span>{% endif %}{% endfor %}</nav>{% endif %}
+{% endblock %}

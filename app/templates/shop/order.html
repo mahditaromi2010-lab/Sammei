@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}سفارش {{ order.code }} | {{ S.site_name_fa }}{% endblock %}
+{% block head %}<meta name="robots" content="noindex">{% endblock %}
+{% block content %}
+{% set page_title = "سفارش " ~ (order.code|fa) %}{% set page_sub = "ثبت‌شده در " ~ order.created_at|jdate %}{% set crumbs = [("پیگیری سفارش", url_for('shop.track')), (order.code, None)] %}
+{% include "shop/_page_hero.html" %}
+{% set st = order.status %}
+{% set pay = order.latest_payment %}
+<div class="wrap two-col">
+  <div class="panel">
+    {% set order_steps = ["ثبت سفارش", "پرداخت", "تایید پرداخت", "ارسال", "تحویل"] %}
+    {% set idx = {"awaiting_payment":1,"payment_rejected":1,"payment_review":2,"paid":3,"shipped":4,"delivered":5,"cancelled":0}[st] %}
+    {% if st != "cancelled" %}
+    <ol class="steps" aria-label="مراحل سفارش">{% for s in order_steps %}<li class="{{ 'done' if loop.index0 < idx else ('now' if loop.index0 == idx else '') }}">{{ s }}</li>{% endfor %}</ol>
+    {% endif %}
+
+    {% if st in ("awaiting_payment", "payment_rejected") %}
+      {% if st == "payment_rejected" %}{% set rej = order.payments|selectattr("status","equalto","rejected")|first %}
+      <div class="status-box bad" style="margin-bottom:1rem">{{ icon("alert") }}<div><b>رسید قبلی تایید نشد.</b><br>{{ rej.reject_reason if rej }}<br>لطفاً رسید درست را دوباره ثبت کن.</div></div>{% endif %}
+      {% if account %}
+      <h2>پرداخت کارت‌به‌کارت</h2>
+      <div class="amount-pill"><span>مبلغ قابل واریز</span><b>{{ order.total|money }} تومان</b></div>
+      <div class="bank-card">
+        <div class="who"><span>{{ account.card_bank or "کارت فروشگاه" }}</span>
+          <button class="copy-btn" type="button" data-copy="{{ account.card_number }}">{{ icon("copy") }}<span>کپی</span></button></div>
+        <div class="num">{{ account.card_number|card }}</div>
+        <div class="who"><span>به نام: <b>{{ account.card_holder }}</b></span>
+          {% if account.sheba %}<span class="ltr">{{ account.sheba }}</span>{% endif %}</div>
+      </div>
+      <p class="hint" style="color:var(--muted)">{{ account.instructions }}</p>
+      <form method="post" action="{{ url_for('shop.order_receipt', code=order.code, t=order.access_token) }}" enctype="multipart/form-data" style="display:grid;gap:1rem;margin-top:1rem">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-grid">
+          <div class="field"><label for="last4">۴ رقم آخر کارت پرداخت‌کننده</label><input class="input" id="last4" name="last4" inputmode="numeric" maxlength="4" required dir="ltr"></div>
+          <div class="field"><label for="ref">شماره پیگیری / مرجع</label><input class="input" id="ref" name="ref" required maxlength="40" dir="ltr"></div>
+          <div class="field full"><label for="paid_at">تاریخ و ساعت واریز</label><input class="input" id="paid_at" name="paid_at" maxlength="40" placeholder="مثلاً ۲۰ آبان، ساعت ۱۴:۳۰"></div>
+        </div>
+        <label class="drop" for="receipt">{{ icon("upload") }}<b>تصویر رسید را انتخاب کن</b><span id="receipt-name" class="hint">JPG، PNG یا WEBP — حداکثر ۱۲ مگابایت</span>
+          <input id="receipt" name="receipt" type="file" accept="image/*" required><img id="receipt-preview" alt="پیش‌نمایش رسید" hidden></label>
+        <button class="btn btn-leaf" type="submit">{{ icon("check") }} ثبت رسید پرداخت</button>
+      </form>
+      {% endif %}
+      {% if gateway %}<p style="margin-top:1rem"><a class="btn btn-lav btn-block" href="{{ url_for('shop.gateway_start', code=order.code, t=order.access_token) }}">پرداخت آنلاین</a></p>{% endif %}
+      {% if not account and not gateway %}<div class="status-box bad">{{ icon("alert") }}<div>اطلاعات پرداخت هنوز ثبت نشده؛ لطفاً با فروشگاه تماس بگیر.</div></div>{% endif %}
+    {% elif st == "payment_review" %}
+      <div class="status-box wait">{{ icon("clock") }}<div><b>رسید تو رسید!</b><br>در حال بررسی پرداخت هستیم؛ معمولاً کمتر از چند ساعت طول می‌کشد. همین صفحه را بعداً دوباره باز کن.</div></div>
+      {% if pay %}<p class="hint" style="color:var(--muted);margin-top:1rem">شماره پیگیری ثبت‌شده: <span class="ltr">{{ pay.ref_number|fa }}</span></p>{% endif %}
+    {% elif st == "paid" %}
+      <div class="status-box">{{ icon("check-circle") }}<div><b>پرداخت تایید شد.</b><br>سفارشت در حال آماده‌سازی است ({{ S.processing_days }}).</div></div>
+    {% elif st == "shipped" %}
+      <div class="status-box">{{ icon("truck") }}<div><b>سفارشت ارسال شد!</b>{% if order.post_tracking %}<br>کد رهگیری پست: <span class="ltr"><b>{{ order.post_tracking|fa }}</b></span>{% endif %}</div></div>
+    {% elif st == "delivered" %}
+      <div class="status-box">{{ icon("heart") }}<div><b>تحویل داده شد.</b><br>امیدواریم دوستش داشته باشی!</div></div>
+    {% else %}
+      <div class="status-box bad">{{ icon("x") }}<div><b>این سفارش لغو شده است.</b><br>برای سوال با ما در تماس باش.</div></div>
+    {% endif %}
+  </div>
+
+  <aside class="panel summary">
+    <h2>جزئیات سفارش</h2>
+    {% for it in order.items %}
+    <div class="line" style="grid-template-columns:56px 1fr auto">
+      <img src="{{ media_url(it.image) }}" alt="" style="width:56px;height:56px" loading="lazy">
+      <div><span class="t">{{ it.title }}</span><div class="s">{{ it.qty|fa }} × {{ it.price|money }}</div></div>
+      <b>{{ it.line_total|money }}</b>
+    </div>{% endfor %}
+    {% if order.discount %}<div class="sum-row"><span>تخفیف</span><b>−{{ order.discount|money }}</b></div>{% endif %}
+    <div class="sum-row"><span>ارسال</span><b>{{ "رایگان" if not order.shipping else order.shipping|money }}</b></div>
+    <div class="sum-row total"><span>جمع کل</span><span>{{ order.total|money }} تومان</span></div>
+    <div class="sum-row"><span>گیرنده</span><b>{{ order.customer_name }}</b></div>
+    <p class="hint" style="color:var(--muted);font-size:.9rem;margin:.3rem 0 0">{{ order.province }}، {{ order.city }}، {{ order.address }}</p>
+    <p class="note">{{ icon("sparkle") }}<span>این صفحه را نشانه‌گذاری کن. با کد <b class="ltr">{{ order.code }}</b> و شماره موبایلت هم از «پیگیری سفارش» قابل دسترسی است.</span></p>
+  </aside>
+</div>
+{% endblock %}

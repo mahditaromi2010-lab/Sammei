@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}سبد خرید | {{ S.site_name_fa }}{% endblock %}
+{% block content %}
+{% set page_title = "سبد خرید" %}{% set page_sub = "" %}{% set crumbs = [("سبد خرید", None)] %}
+{% include "shop/_page_hero.html" %}
+{% if lines %}
+<div class="wrap two-col">
+  <form class="panel" method="post" action="{{ url_for('shop.cart_update') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    {% for l in lines %}{% set p = l.product %}
+    <div class="line">
+      <a href="{{ url_for('shop.product', slug=p.slug) }}"><img src="{{ media_url(p.main_image.path_sm if p.main_image else None) }}" alt="" loading="lazy"></a>
+      <div><a class="t" href="{{ url_for('shop.product', slug=p.slug) }}">{{ p.title }}</a>
+        <div class="s">{{ p.price|money }} تومان{% if p.size %} · {{ p.size }}{% endif %}</div></div>
+      <div class="r">
+        {% if p.max_qty() > 1 %}
+        <div class="qty"><button type="button" data-step="1" aria-label="بیشتر">+</button>
+          <label class="sr-only" for="q{{ p.id }}">تعداد {{ p.title }}</label>
+          <input id="q{{ p.id }}" name="qty_{{ p.id }}" type="number" min="0" max="{{ p.max_qty() }}" value="{{ l.qty }}" data-autosubmit inputmode="numeric">
+          <button type="button" data-step="-1" aria-label="کمتر">−</button></div>
+        {% else %}<input type="hidden" name="qty_{{ p.id }}" value="1"><span class="s">تک‌نسخه</span>{% endif %}
+        <b>{{ l.total|money }} <small>تومان</small></b>
+        <button class="link-btn" name="remove" value="{{ p.id }}">حذف</button>
+      </div>
+    </div>
+    {% endfor %}
+    <noscript><button class="btn btn-ghost" type="submit">به‌روزرسانی سبد</button></noscript>
+  </form>
+  <aside class="panel summary">
+    <h2>خلاصه‌ی سفارش</h2>
+    <div class="sum-row"><span>جمع کالاها</span><b>{{ t.subtotal|money }} تومان</b></div>
+    {% if t.discount %}<div class="sum-row" style="color:var(--leaf)"><span>تخفیف ({{ t.coupon.code }})</span><b>−{{ t.discount|money }}</b></div>{% endif %}
+    <div class="sum-row"><span>هزینه ارسال</span><b>{{ "رایگان" if not t.shipping else (t.shipping|money ~ " تومان") }}</b></div>
+    {% if t.free_over and t.shipping %}{% set left = t.free_over - (t.subtotal - t.discount) %}
+    <div class="free-bar">فقط {{ left|money }} تومان تا ارسال رایگان<div class="bar"><i style="width:{{ ((t.subtotal - t.discount) * 100 // t.free_over)|int }}%"></i></div></div>{% endif %}
+    <div class="sum-row total"><span>مبلغ قابل پرداخت</span><span>{{ t.total|money }} تومان</span></div>
+    <form method="post" action="{{ url_for('shop.cart_coupon') }}" style="display:flex;gap:.5rem;margin:1rem 0">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label class="sr-only" for="cp">کد تخفیف</label>
+      <input class="input" id="cp" name="code" placeholder="کد تخفیف" value="{{ t.coupon.code if t.coupon else '' }}">
+      <button class="btn btn-ghost" type="submit">اعمال</button>
+    </form>
+    <a class="btn btn-block" href="{{ url_for('shop.checkout') }}">ادامه و ثبت نشانی {{ icon("chev") }}</a>
+  </aside>
+</div>
+{% else %}
+<div class="wrap empty"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt=""><p>سبدت هنوز خالیه؛ یک دوست بافتنی منتظرته!</p>
+  <a class="btn" href="{{ url_for('shop.catalog') }}">رفتن به فروشگاه</a></div>
+{% endif %}
+{% endblock %}

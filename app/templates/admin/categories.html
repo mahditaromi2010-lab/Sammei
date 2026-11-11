@@ -1,0 +1,28 @@
+{% extends "admin/_base.html" %}
+{% block title %}دسته‌بندی‌ها{% endblock %}{% block heading %}دسته‌بندی‌ها{% endblock %}
+{% block content %}
+<div class="grid g-side">
+<div class="table-wrap"><table><thead><tr><th>نام</th><th>نامک</th><th>ترتیب</th><th>محصول</th><th>نمایش</th><th></th></tr></thead><tbody>
+{% for c in rows %}<tr><td colspan="6" style="padding:0">
+  <form method="post" style="display:grid;grid-template-columns:1.2fr 1fr 70px 60px 70px auto;gap:.5rem;align-items:center;padding:.5rem .6rem">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ c.id }}">
+    <input class="input" name="name" value="{{ c.name }}" aria-label="نام">
+    <input class="input" name="slug" value="{{ c.slug }}" dir="ltr" aria-label="نامک">
+    <input class="input" name="sort" value="{{ c.sort }}" dir="ltr" aria-label="ترتیب">
+    <span class="muted">{{ c.products.count()|fa }}</span>
+    <label class="check"><input type="checkbox" name="is_active" value="1" {{ 'checked' if c.is_active }}></label>
+    <span style="display:flex;gap:.3rem"><input type="hidden" name="description" value="{{ c.description }}"><button class="btn sm leaf">ذخیره</button><button class="btn sm ghost" name="action" value="delete">حذف</button></span>
+  </form></td></tr>{% endfor %}
+</tbody></table></div>
+<form class="card" method="post"><h2>{{ icon("plus-cart") }} دسته‌ی جدید</h2>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="grid">
+    <div class="field"><label for="cn">نام</label><input class="input" id="cn" name="name" required></div>
+    <div class="field"><label for="cs">نامک (انگلیسی)</label><input class="input" id="cs" name="slug" dir="ltr"></div>
+    <div class="field"><label for="cd">توضیح</label><input class="input" id="cd" name="description"></div>
+    <div class="field"><label for="co">ترتیب</label><input class="input" id="co" name="sort" value="10" dir="ltr"></div>
+    <label class="check"><input type="checkbox" name="is_active" value="1" checked> نمایش</label>
+    <button class="btn pink">افزودن</button>
+  </div></form>
+</div>
+{% endblock %}

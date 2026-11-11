@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}تکمیل سفارش | {{ S.site_name_fa }}{% endblock %}
+{% macro f(name, label, type="text", full=False, attrs="") -%}
+<div class="field{{ ' full' if full }}"><label for="f-{{ name }}">{{ label }}</label>
+  {% if type == "textarea" %}<textarea class="input{{ ' is-bad' if errors[name] }}" id="f-{{ name }}" name="{{ name }}" {{ attrs|safe }}>{{ form[name] }}</textarea>
+  {% else %}<input class="input{{ ' is-bad' if errors[name] }}" id="f-{{ name }}" name="{{ name }}" type="{{ type }}" value="{{ form[name] }}" {{ attrs|safe }}>{% endif %}
+  {% if errors[name] %}<span class="err">{{ errors[name] }}</span>{% endif %}</div>
+{%- endmacro %}
+{% block content %}
+{% set page_title = "تکمیل سفارش" %}{% set page_sub = "" %}{% set crumbs = [("سبد خرید", url_for('shop.cart')), ("تکمیل سفارش", None)] %}
+{% include "shop/_page_hero.html" %}
+<form class="wrap two-col" method="post" novalidate>
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="panel">
+    <h2>مشخصات گیرنده</h2>
+    <div class="form-grid">
+      {{ f("customer_name", "نام و نام خانوادگی", attrs='required autocomplete="name" maxlength="120"') }}
+      {{ f("phone", "موبایل", "tel", attrs='required inputmode="numeric" autocomplete="tel" placeholder="09xxxxxxxxx" dir="ltr"') }}
+      <div class="field"><label for="f-province">استان</label>
+        <select class="input{{ ' is-bad' if errors.province }}" id="f-province" name="province" required>
+          <option value="">انتخاب کن</option>{% for p in provinces %}<option {{ 'selected' if form.province == p }}>{{ p }}</option>{% endfor %}
+        </select>{% if errors.province %}<span class="err">{{ errors.province }}</span>{% endif %}</div>
+      {{ f("city", "شهر", attrs='required maxlength="80"') }}
+      {{ f("address", "نشانی کامل", "textarea", True, 'required maxlength="500" autocomplete="street-address"') }}
+      {{ f("postal_code", "کد پستی", attrs='required inputmode="numeric" maxlength="12" dir="ltr"') }}
+      {{ f("email", "ایمیل (اختیاری)", "email", attrs='autocomplete="email" dir="ltr"') }}
+      {{ f("note", "توضیحات سفارش (اختیاری)", "textarea", True, 'maxlength="500" placeholder="مثلاً: کادوپیچ شود، یا رنگ دلخواه"') }}
+    </div>
+    <h2 style="margin-top:1.6rem">روش پرداخت</h2>
+    {% if methods %}
+    <div class="methods">
+      {% for m in methods %}
+      <label class="method"><input type="radio" name="method" value="{{ m.code }}" {{ 'checked' if form.method == m.code or (not form.method and loop.first) }}>
+        <span>{{ icon("box" if not m.online else "check-circle") }}</span>
+        <div><b>{{ m.title }}</b><span>{{ m.description }}</span></div></label>
+      {% endfor %}
+    </div>
+    {% if errors.method %}<span class="err">{{ errors.method }}</span>{% endif %}
+    {% else %}
+    <div class="status-box bad">{{ icon("alert") }}<div>فعلاً امکان پرداخت فعال نیست. لطفاً از فرم تماس سفارش بده.</div></div>
+    {% endif %}
+  </div>
+  <aside class="panel summary">
+    <h2>سبد تو</h2>
+    {% for l in lines %}
+    <div class="sum-row"><span>{{ l.product.title }} × {{ l.qty|fa }}</span><b>{{ l.total|money }}</b></div>
+    {% endfor %}
+    {% if t.discount %}<div class="sum-row" style="color:var(--leaf)"><span>تخفیف</span><b>−{{ t.discount|money }}</b></div>{% endif %}
+    <div class="sum-row"><span>ارسال</span><b>{{ "رایگان" if not t.shipping else t.shipping|money }}</b></div>
+    <div class="sum-row total"><span>مبلغ نهایی</span><span>{{ t.total|money }} تومان</span></div>
+    <button class="btn btn-block" type="submit" {{ 'disabled' if not methods }} style="margin-top:1rem">ثبت سفارش {{ icon("check") }}</button>
+    <p class="field hint" style="margin-top:.8rem">با ثبت سفارش، کالاها برای تو کنار گذاشته می‌شوند تا پرداخت را ثبت کنی.</p>
+  </aside>
+</form>
+{% endblock %}

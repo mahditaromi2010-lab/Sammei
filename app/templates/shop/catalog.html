@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon, product_card %}
+{% block title %}{{ category.name if category else "فروشگاه" }} | {{ S.site_name_fa }}{% endblock %}
+{% block content %}
+{% set page_title = category.name if category else ("نتایج «" ~ q ~ "»" if q else "فروشگاه") %}
+{% set page_sub = category.description if category else "عروسک‌های بافتنی، ست‌ها، جاکلیدی‌ها و تابلوهای نقاشی" %}
+{% set crumbs = [("فروشگاه", url_for('shop.catalog') if category else None)] + ([(category.name, None)] if category else []) %}
+{% include "shop/_page_hero.html" %}
+<div class="wrap shop-layout">
+  <aside class="filters" aria-label="فیلترها">
+    <form action="{{ url_for('shop.catalog') }}">
+      {% if category %}<input type="hidden" name="cat" value="{{ category.slug }}">{% endif %}
+      <label class="sr-only" for="fq">جستجو</label>
+      <input class="input" id="fq" name="q" value="{{ q }}" placeholder="جستجو…">
+    </form>
+    <div>
+      <h4>دسته‌بندی‌ها</h4>
+      <div class="cats">
+        <a href="{{ url_for('shop.catalog', q=q or None) }}" class="{{ 'on' if not category }}">همه</a>
+        {% for c in categories %}<a href="{{ url_for('shop.catalog', cat=c.slug, q=q or None) }}" class="{{ 'on' if category and category.id == c.id }}">{{ c.name }}</a>{% endfor %}
+      </div>
+    </div>
+    <form action="{{ url_for('shop.catalog') }}">
+      {% if category %}<input type="hidden" name="cat" value="{{ category.slug }}">{% endif %}
+      {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+      <input type="hidden" name="sort" value="{{ sort }}">
+      <label class="check"><input type="checkbox" name="available" value="1" {{ 'checked' if only_available }} data-autosubmit> فقط موجودها</label>
+    </form>
+  </aside>
+  <section>
+    <div class="toolbar">
+      <span class="count">{{ pager.total|fa }} محصول</span>
+      <form action="{{ url_for('shop.catalog') }}">
+        {% if category %}<input type="hidden" name="cat" value="{{ category.slug }}">{% endif %}
+        {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+        {% if only_available %}<input type="hidden" name="available" value="1">{% endif %}
+        <label class="sr-only" for="sort">مرتب‌سازی</label>
+        <select class="input" id="sort" name="sort" data-autosubmit>
+          {% for k, label in [("new","جدیدترین"),("popular","محبوب‌ترین"),("cheap","ارزان‌ترین"),("expensive","گران‌ترین")] %}
+          <option value="{{ k }}" {{ 'selected' if sort == k }}>{{ label }}</option>{% endfor %}
+        </select>
+      </form>
+    </div>
+    {% if pager.items %}
+    <div class="grid">{% for p in pager.items %}{{ product_card(p) }}{% endfor %}</div>
+    {% if pager.pages > 1 %}
+    <nav class="pager" aria-label="صفحه‌ها">
+      {% for n in pager.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+        {% if n %}{% if n == pager.page %}<span class="on" aria-current="page">{{ n|fa }}</span>{% else %}
+        <a href="{{ url_for('shop.catalog', page=n, cat=category.slug if category else None, q=q or None, sort=sort, available=1 if only_available else None) }}">{{ n|fa }}</a>{% endif %}
+        {% else %}<span>…</span>{% endif %}
+      {% endfor %}
+    </nav>{% endif %}
+    {% else %}
+    <div class="empty"><img src="{{ url_for('static', filename='img/logo.svg') }}" alt=""><p>چیزی پیدا نشد. یک کلمه‌ی دیگر امتحان کن!</p>
+      <a class="btn btn-ghost" href="{{ url_for('shop.catalog') }}">همه‌ی محصولات</a></div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

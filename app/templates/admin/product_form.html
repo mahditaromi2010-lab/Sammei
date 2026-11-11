@@ -1,0 +1,88 @@
+{% extends "admin/_base.html" %}
+{% block title %}{{ p.title or "محصول جدید" }}{% endblock %}
+{% block heading %}{{ p.title if p.id else "محصول جدید" }}{% endblock %}
+{% block actions %}{% if p.id %}<a class="btn ghost" href="{{ url_for('shop.product', slug=p.slug) }}" target="_blank" rel="noopener">مشاهده در سایت</a>{% endif %}{% endblock %}
+{% block content %}
+<form method="post" enctype="multipart/form-data" id="pform">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="grid g-side">
+  <div class="grid">
+    <div class="card"><h2>{{ icon("yarn") }} اطلاعات اصلی</h2>
+      <div class="fg">
+        <div class="field full"><label for="title">عنوان محصول *</label><input class="input" id="title" name="title" value="{{ p.title or '' }}" required maxlength="160"></div>
+        <div class="field full"><label for="short">توضیح کوتاه</label><input class="input" id="short" name="short" value="{{ p.short or '' }}" maxlength="300"><span class="hint">زیر عنوان و در نتایج جستجو نمایش داده می‌شود.</span></div>
+        <div class="field full"><label for="description">توضیحات کامل</label><textarea id="description" name="description" rows="7">{{ p.description or '' }}</textarea><span class="hint">هر خط یک پاراگراف می‌شود.</span></div>
+      </div>
+    </div>
+    <div class="card"><h2>{{ icon("box") }} مشخصات</h2>
+      <div class="fg">
+        <div class="field"><label for="size">اندازه</label><input class="input" id="size" name="size" value="{{ p.size or '' }}" placeholder="مثلاً حدود ۱۲ سانتی‌متر"></div>
+        <div class="field"><label for="weight">وزن</label><input class="input" id="weight" name="weight" value="{{ p.weight or '' }}" placeholder="مثلاً ۸۰ گرم"></div>
+        <div class="field"><label for="material">جنس</label><input class="input" id="material" name="material" value="{{ p.material or '' }}"></div>
+        <div class="field"><label for="colors">رنگ‌ها</label><input class="input" id="colors" name="colors" value="{{ p.colors or '' }}" placeholder="صورتی، کرم"></div>
+        <div class="field full"><label for="care">نگهداری و شستشو</label><input class="input" id="care" name="care" value="{{ p.care or '' }}"></div>
+        <div class="field"><label for="tags">کلیدواژه‌ها (برای جستجو)</label><input class="input" id="tags" name="tags" value="{{ p.tags or '' }}" placeholder="خرگوش، هدیه تولد"></div>
+        <div class="field"><label for="sku">کد محصول (SKU)</label><input class="input" id="sku" name="sku" value="{{ p.sku or '' }}" dir="ltr"></div>
+      </div>
+    </div>
+    <div class="card" id="images"><h2>{{ icon("upload") }} تصاویر</h2>
+      {% if p.images %}
+      <div class="imgs">{% for img in p.images %}
+        <div class="img-card{{ ' main' if loop.first }}">
+          <img src="{{ media_url(img.path_sm) }}" alt="">
+          <input class="input sm" style="width:100%" name="alt_{{ img.id }}" value="{{ img.alt }}" placeholder="متن جایگزین" aria-label="متن جایگزین تصویر {{ loop.index }}">
+          <div class="acts">
+            {% if not loop.first %}<button form="img{{ img.id }}" name="action" value="main" title="تصویر اصلی">اصلی</button>
+            <button form="img{{ img.id }}" name="action" value="up" title="جلوتر">→</button>{% else %}<span class="badge b-submitted">تصویر اصلی</span>{% endif %}
+            {% if not loop.last %}<button form="img{{ img.id }}" name="action" value="down" title="عقب‌تر">←</button>{% endif %}
+            <button form="img{{ img.id }}" class="del" name="action" value="delete" title="حذف">حذف</button>
+          </div>
+        </div>{% endfor %}
+      </div>{% else %}<p class="muted">هنوز تصویری ندارد.</p>{% endif %}
+      <label class="drop" style="margin-top:1rem" for="imgup">{{ icon("upload") }}<b>افزودن تصویر (چندتایی)</b><span class="hint" id="imgup-names">JPG، PNG یا WEBP؛ خودکار فشرده و بهینه می‌شود</span>
+        <input id="imgup" type="file" name="images" accept="image/*" multiple style="position:absolute;opacity:0;width:1px"></label>
+    </div>
+  </div>
+  <div class="grid" style="position:sticky;top:1rem">
+    <div class="card"><h2>{{ icon("check-circle") }} انتشار</h2>
+      <div class="grid">
+        <label class="check"><input type="checkbox" name="is_active" value="1" {{ 'checked' if p.is_active }}> نمایش در سایت</label>
+        <label class="check"><input type="checkbox" name="is_featured" value="1" {{ 'checked' if p.is_featured }}> محصول ویژه (صفحه اصلی)</label>
+        <button class="btn leaf" type="submit" style="justify-content:center">ذخیره</button>
+      </div>
+    </div>
+    <div class="card"><h2>{{ icon("gift") }} قیمت و موجودی</h2>
+      <div class="grid">
+        <div class="field"><label for="price">قیمت (تومان) *</label><input class="input" id="price" name="price" value="{{ p.price or '' }}" inputmode="numeric" dir="ltr" required></div>
+        <div class="field"><label for="compare_price">قیمت قبل از تخفیف</label><input class="input" id="compare_price" name="compare_price" value="{{ p.compare_price or '' }}" inputmode="numeric" dir="ltr"><span class="hint">اگر بیشتر از قیمت باشد، تخفیف نشان داده می‌شود.</span></div>
+        <div class="field"><label for="stock">موجودی</label><input class="input" id="stock" name="stock" value="{{ p.stock or 0 }}" inputmode="numeric" dir="ltr"></div>
+        <label class="check"><input type="checkbox" name="made_to_order" value="1" {{ 'checked' if p.made_to_order }}> قابل سفارش ساخت (حتی با موجودی صفر)</label>
+        <div class="field"><label for="making_days">زمان ساخت (روز)</label><input class="input" id="making_days" name="making_days" value="{{ p.making_days or 0 }}" inputmode="numeric" dir="ltr"></div>
+      </div>
+    </div>
+    <div class="card"><h2>{{ icon("leaf") }} دسته و نوع</h2>
+      <div class="grid">
+        <div class="field"><label for="category_id">دسته</label><select id="category_id" name="category_id"><option value="">بدون دسته</option>{% for c in categories %}<option value="{{ c.id }}" {{ 'selected' if p.category_id == c.id }}>{{ c.name }}</option>{% endfor %}</select></div>
+        <div class="field"><label for="kind">نوع نمایش</label><select id="kind" name="kind">{% for k, l in [("crochet","عروسک / بافتنی"),("painting","تابلوی نقاشی (گالری)"),("other","سایر")] %}<option value="{{ k }}" {{ 'selected' if p.kind == k }}>{{ l }}</option>{% endfor %}</select></div>
+        <div class="field"><label for="slug">نامک (آدرس)</label><input class="input" id="slug" name="slug" value="{{ p.slug or '' }}" dir="ltr" placeholder="خالی = از روی عنوان"></div>
+        <div class="field"><label for="sort">ترتیب نمایش</label><input class="input" id="sort" name="sort" value="{{ p.sort or 0 }}" inputmode="numeric" dir="ltr"><span class="hint">عدد کمتر، جلوتر.</span></div>
+      </div>
+    </div>
+    {% if p.id %}<div class="card"><h2>{{ icon("sparkle") }} آمار</h2><dl class="kv"><dt>بازدید</dt><dd>{{ p.views|fa }}</dd><dt>فروخته‌شده</dt><dd>{{ sold|fa }}</dd><dt>آخرین ویرایش</dt><dd>{{ p.updated_at|jdate }}</dd></dl></div>{% endif %}
+  </div>
+</div>
+</form>
+{% if p.id %}
+{% for img in p.images %}<form id="img{{ img.id }}" method="post" action="{{ url_for('admin.product_image', pid=p.id, iid=img.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"></form>{% endfor %}
+<div class="card" style="margin-top:1.2rem"><h2>{{ icon("alert") }} عملیات دیگر</h2>
+  <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center">
+    <form method="post" action="{{ url_for('admin.product_action', pid=p.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="btn ghost" name="action" value="duplicate">ساخت کپی</button></form>
+    <form method="post" action="{{ url_for('admin.product_action', pid=p.id) }}" style="display:flex;gap:.4rem;margin-inline-start:auto">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input class="input" name="confirm" placeholder="برای حذف بنویس: {{ p.slug }}" dir="ltr" style="width:260px" aria-label="تایید حذف">
+      <button class="btn danger" name="action" value="delete">حذف محصول</button></form>
+  </div>
+  <p class="muted" style="margin:.6rem 0 0;font-size:.85rem">برای پنهان‌کردن موقت، به‌جای حذف تیک «نمایش در سایت» را بردار. سفارش‌های قبلی با حذف محصول از بین نمی‌روند.</p>
+</div>
+{% endif %}
+{% endblock %}

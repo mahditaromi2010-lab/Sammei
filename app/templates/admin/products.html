@@ -1,0 +1,30 @@
+{% extends "admin/_base.html" %}
+{% block title %}محصولات{% endblock %}{% block heading %}محصولات{% endblock %}
+{% block actions %}<a class="btn pink" href="{{ url_for('admin.product_new') }}">{{ icon("plus-cart") }} محصول جدید</a>{% endblock %}
+{% block content %}
+<form class="filters">
+  <input class="input" name="q" value="{{ q }}" placeholder="جستجو در عنوان، کد، نامک">
+  <select name="cat"><option value="">همه‌ی دسته‌ها</option>{% for c in categories %}<option value="{{ c.id }}" {{ 'selected' if cat == c.id }}>{{ c.name }}</option>{% endfor %}</select>
+  <select name="state"><option value="">همه</option><option value="hidden" {{ 'selected' if state=='hidden' }}>پنهان</option><option value="out" {{ 'selected' if state=='out' }}>ناموجود</option><option value="featured" {{ 'selected' if state=='featured' }}>ویژه</option></select>
+  <button class="btn ghost">فیلتر</button><span class="muted">{{ pager.total|fa }} محصول</span>
+</form>
+<form method="post" action="{{ url_for('admin.products_bulk') }}">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="table-wrap"><table>
+<thead><tr><th></th><th>عنوان</th><th>دسته</th><th>قیمت (تومان)</th><th>موجودی</th><th>نمایش</th><th>ویژه</th><th></th></tr></thead><tbody>
+{% for p in pager.items %}
+<tr>
+  <td><img class="thumb" src="{{ media_url(p.main_image.path_sm if p.main_image else None) }}" alt=""></td>
+  <td><a href="{{ url_for('admin.product_edit', pid=p.id) }}"><b>{{ p.title }}</b></a><div class="muted ltr" style="font-size:.78rem">{{ p.slug }}</div></td>
+  <td class="muted">{{ p.category.name if p.category else "—" }}</td>
+  <td><input class="input sm" name="price_{{ p.id }}" value="{{ p.price }}" inputmode="numeric" dir="ltr" aria-label="قیمت {{ p.title }}"></td>
+  <td><input class="input sm" style="width:70px" name="stock_{{ p.id }}" value="{{ p.stock }}" inputmode="numeric" dir="ltr" aria-label="موجودی {{ p.title }}">{% if p.made_to_order %}<div class="muted" style="font-size:.75rem">سفارشی</div>{% endif %}</td>
+  <td>{% if p.is_active %}<span class="on-off">● فعال</span>{% else %}<span class="off">○ پنهان</span>{% endif %}</td>
+  <td>{{ "★" if p.is_featured else "" }}</td>
+  <td><a class="btn ghost sm" href="{{ url_for('admin.product_edit', pid=p.id) }}">ویرایش</a></td>
+</tr>{% else %}<tr><td colspan="8" class="empty">محصولی پیدا نشد.</td></tr>{% endfor %}
+</tbody></table></div>
+{% if pager.items %}<p><button class="btn leaf">ذخیره‌ی قیمت‌ها و موجودی‌ها</button> <span class="muted">قیمت و موجودی را مستقیم در جدول عوض کن و یک‌جا ذخیره کن.</span></p>{% endif %}
+</form>
+{% if pager.pages > 1 %}<nav class="pager">{% for n in pager.iter_pages() %}{% if n %}{% if n == pager.page %}<span class="on">{{ n|fa }}</span>{% else %}<a href="{{ url_for('admin.products', page=n, q=q, cat=cat or None, state=state or None) }}">{{ n|fa }}</a>{% endif %}{% else %}<span>…</span>{% endif %}{% endfor %}</nav>{% endif %}
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "admin/_base.html" %}
+{% block title %}کدهای تخفیف{% endblock %}{% block heading %}کدهای تخفیف{% endblock %}
+{% block content %}
+<div class="grid g-side">
+<div class="table-wrap"><table><thead><tr><th>کد</th><th>تخفیف</th><th>حداقل خرید</th><th>استفاده</th><th>انقضا</th><th>وضعیت</th><th></th></tr></thead><tbody>
+{% for c in rows %}<tr><td class="ltr"><b>{{ c.code }}</b></td><td>{{ (c.percent|fa ~ "٪") if c.percent else (c.amount|money ~ " تومان") }}</td><td>{{ c.min_total|money }}</td>
+<td>{{ c.used|fa }}{% if c.max_uses %} / {{ c.max_uses|fa }}{% endif %}</td><td class="muted">{{ c.expires_at|jdate(False) if c.expires_at else "—" }}</td>
+<td>{% if c.is_active %}<span class="on-off">● فعال</span>{% else %}<span class="off">○ غیرفعال</span>{% endif %}</td>
+<td><form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><input type="hidden" name="id" value="{{ c.id }}"><button class="btn sm ghost" name="action" value="delete">حذف</button></form></td></tr>
+{% else %}<tr><td colspan="7" class="empty">هنوز کد تخفیفی نساخته‌ای.</td></tr>{% endfor %}</tbody></table></div>
+<form class="card" method="post"><h2>{{ icon("gift") }} کد جدید</h2><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<div class="grid">
+  <div class="field"><label for="cc">کد</label><input class="input" id="cc" name="code" required dir="ltr" placeholder="YALDA"></div>
+  <div class="fg"><div class="field"><label for="cp">درصد</label><input class="input" id="cp" name="percent" value="10" dir="ltr"></div>
+  <div class="field"><label for="ca">یا مبلغ ثابت</label><input class="input" id="ca" name="amount" value="0" dir="ltr"></div></div>
+  <div class="field"><label for="cm">حداقل مبلغ سبد</label><input class="input" id="cm" name="min_total" value="0" dir="ltr"></div>
+  <div class="fg"><div class="field"><label for="cu">حداکثر استفاده</label><input class="input" id="cu" name="max_uses" value="0" dir="ltr"><span class="hint">۰ = نامحدود</span></div>
+  <div class="field"><label for="cd">اعتبار (روز)</label><input class="input" id="cd" name="days" value="0" dir="ltr"><span class="hint">۰ = همیشگی</span></div></div>
+  <label class="check"><input type="checkbox" name="is_active" value="1" checked> فعال</label><button class="btn pink">ساخت کد</button>
+</div></form>
+</div>
+{% endblock %}

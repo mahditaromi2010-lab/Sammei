@@ -1,0 +1,9 @@
+services:
+  web:
+    build: .
+    env_file: .env
+    ports: ["8000:8000"]
+    volumes: ["shop-data:/data"]
+    restart: unless-stopped
+volumes:
+  shop-data:

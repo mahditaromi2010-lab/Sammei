@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon %}
+{% block title %}پیگیری سفارش | {{ S.site_name_fa }}{% endblock %}
+{% block content %}
+{% set page_title = "پیگیری سفارش" %}{% set page_sub = "کد سفارش و شماره موبایلی که با آن خرید کردی" %}{% set crumbs = [("پیگیری سفارش", None)] %}
+{% include "shop/_page_hero.html" %}
+<div class="wrap two-col">
+  <form class="panel" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="form-grid">
+      <div class="field"><label for="tc">کد سفارش</label><input class="input" id="tc" name="code" required placeholder="S1234567" dir="ltr"></div>
+      <div class="field"><label for="tp">موبایل</label><input class="input" id="tp" name="phone" required inputmode="numeric" placeholder="09xxxxxxxxx" dir="ltr"></div>
+    </div>
+    <button class="btn btn-night" style="margin-top:1rem" type="submit">{{ icon("search") }} پیدا کن</button>
+  </form>
+  <aside class="panel">
+    <h2>سفارش‌های اخیر این دستگاه</h2>
+    {% for o in recent %}
+    <a class="sum-row" href="{{ url_for('shop.order_view', code=o.code) }}"><span class="ltr">{{ o.code }}</span><b>{{ o.status_label }}</b></a>
+    {% else %}<p class="hint" style="color:var(--muted)">هنوز سفارشی از این دستگاه ثبت نشده.</p>{% endfor %}
+  </aside>
+</div>
+{% endblock %}

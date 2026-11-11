@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon, product_card, sec_head %}
+{% block title %}{{ p.title }} | {{ S.site_name_fa }}{% endblock %}
+{% block description %}{{ p.short or p.title }}{% endblock %}
+{% block head %}
+{% if p.main_image %}<meta property="og:image" content="{{ media_url(p.main_image.path) }}">{% endif %}
+<script type="application/ld+json" nonce="{{ csp_nonce }}">{{ {"@context":"https://schema.org","@type":"Product","name":p.title,"description":p.short,
+ "image":(request.url_root.rstrip('/') ~ media_url(p.main_image.path)) if p.main_image else "",
+ "sku":p.sku or p.slug,"offers":{"@type":"Offer","price":p.price*10,"priceCurrency":"IRR",
+ "availability":"https://schema.org/InStock" if p.in_stock else "https://schema.org/OutOfStock"}}|tojson }}</script>
+{% endblock %}
+{% block content %}
+{% set page_title = p.title %}{% set page_sub = "" %}
+{% set crumbs = [("فروشگاه", url_for('shop.catalog'))] + ([(p.category.name, url_for('shop.catalog', cat=p.category.slug))] if p.category else []) %}
+{% include "shop/_page_hero.html" %}
+<div class="wrap pdp">
+  <div class="pdp-gallery">
+    <div class="pdp-main"><img src="{{ media_url(p.main_image.path if p.main_image else None) }}" alt="{{ p.main_image.alt if p.main_image else p.title }}" width="1200" height="1200"></div>
+    {% if p.images|length > 1 %}
+    <div class="thumbs" role="list">
+      {% for img in p.images %}
+      <button type="button" class="{{ 'on' if loop.first }}" data-src="{{ media_url(img.path) }}" data-alt="{{ img.alt }}" aria-label="تصویر {{ loop.index|fa }}">
+        <img src="{{ media_url(img.path_sm) }}" alt="" loading="lazy"></button>
+      {% endfor %}
+    </div>{% endif %}
+  </div>
+  <div class="pdp-info">
+    {% if p.category %}<a class="chip" href="{{ url_for('shop.catalog', cat=p.category.slug) }}">{{ p.category.name }}</a>{% endif %}
+    <h1 style="margin-top:.6rem">{{ p.title }}</h1>
+    {% if p.short %}<p class="lead">{{ p.short }}</p>{% endif %}
+    <div class="pdp-price">{{ p.price|money }} <small>تومان</small>{% if p.discount_percent %}<del>{{ p.compare_price|money }}</del><span class="tag sale" style="position:static">{{ p.discount_percent|fa }}٪</span>{% endif %}</div>
+    {% if p.stock > 2 %}<span class="stock">{{ icon("check") }} موجود</span>
+    {% elif p.stock > 0 %}<span class="stock low">{{ icon("clock") }} فقط {{ p.stock|fa }} عدد باقی مانده</span>
+    {% elif p.made_to_order %}<span class="stock low">{{ icon("yarn") }} ساخت سفارشی{% if p.making_days %}، حدود {{ p.making_days|fa }} روز{% endif %}</span>
+    {% else %}<span class="stock out">{{ icon("alert") }} {{ "فروخته شد" if p.kind == "painting" else "فعلاً ناموجود" }}</span>{% endif %}
+
+    {% if p.in_stock %}
+    <form class="buy" method="post" action="{{ url_for('shop.cart_add') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="product_id" value="{{ p.id }}">
+      {% if p.max_qty() > 1 %}
+      <div class="qty"><button type="button" data-step="1" aria-label="بیشتر">+</button>
+        <label class="sr-only" for="qty">تعداد</label><input id="qty" name="qty" type="number" min="1" max="{{ p.max_qty() }}" value="1" inputmode="numeric">
+        <button type="button" data-step="-1" aria-label="کمتر">−</button></div>
+      {% endif %}
+      <button class="btn" type="submit">{{ icon("plus-cart") }} افزودن به سبد</button>
+      <button class="btn btn-night" type="submit" name="next" value="cart">خرید سریع</button>
+    </form>
+    {% else %}
+    <p><a class="btn btn-ghost" href="{{ url_for('shop.contact') }}">{{ icon("mail") }} سفارش ساخت مشابه</a></p>
+    {% endif %}
+
+    <div class="specs"><dl>
+      {% if p.size %}<dt>اندازه</dt><dd>{{ p.size }}</dd>{% endif %}
+      {% if p.material %}<dt>جنس</dt><dd>{{ p.material }}</dd>{% endif %}
+      {% if p.colors %}<dt>رنگ‌ها</dt><dd>{{ p.colors }}</dd>{% endif %}
+      {% if p.weight %}<dt>وزن</dt><dd>{{ p.weight }}</dd>{% endif %}
+      {% if p.making_days and p.made_to_order %}<dt>زمان ساخت</dt><dd>{{ p.making_days|fa }} روز</dd>{% endif %}
+      <dt>آماده‌سازی و ارسال</dt><dd>{{ S.processing_days }}</dd>
+      {% if p.care %}<dt>نگهداری</dt><dd>{{ p.care }}</dd>{% endif %}
+    </dl></div>
+    {% if p.description %}<div class="prose" style="margin-top:1.4rem">{% for para in p.description.split('\n') if para.strip() %}<p>{{ para }}</p>{% endfor %}</div>{% endif %}
+    <div class="note">{{ icon("sparkle") }}<span>{{ S.handmade_note }}</span></div>
+  </div>
+</div>
+{% if related %}
+<section class="section wrap">
+  {{ sec_head("شاید این‌ها را هم دوست داشته باشی") }}
+  <div class="grid">{% for r in related %}{{ product_card(r) }}{% endfor %}</div>
+</section>{% endif %}
+{% endblock %}

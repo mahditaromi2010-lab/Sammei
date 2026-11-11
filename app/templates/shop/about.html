@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_icons.html" import icon, sec_head %}
+{% block title %}درباره ما | {{ S.site_name_fa }}{% endblock %}
+{% block content %}
+{% set page_title = S.about_title %}{% set page_sub = S.tagline %}{% set crumbs = [("درباره ما", None)] %}
+{% include "shop/_page_hero.html" %}
+<section class="wrap section cols-2">
+  <img src="{{ url_for('static', filename='img/story.webp') }}" alt="یکی از نقاشی‌های سمی" style="border-radius:32px;box-shadow:var(--shadow-lg)" loading="lazy">
+  <div class="prose">
+    <h2 style="font-size:2rem;color:var(--ink)">هر بخیه، یک لبخند</h2>
+    <p>{{ S.about_text }}</p>
+    <p>{{ S.handmade_note }}</p>
+    <a class="btn" href="{{ url_for('shop.catalog') }}">رفتن به فروشگاه {{ icon("chev") }}</a>
+  </div>
+</section>
+<section class="wrap section faq" id="faq">
+  {{ sec_head("سوال‌های پرتکرار") }}
+  <details open><summary>پرداخت چطور انجام می‌شود؟</summary><p>فعلاً پرداخت به‌صورت کارت‌به‌کارت است: بعد از ثبت سفارش، شماره کارت فروشگاه و مبلغ را می‌بینی، واریز می‌کنی و تصویر رسید را در صفحه‌ی سفارش بارگذاری می‌کنی. پس از تایید، سفارش آماده‌ی ارسال می‌شود.</p></details>
+  <details><summary>ارسال چقدر طول می‌کشد؟</summary><p>آماده‌سازی {{ S.processing_days }} زمان می‌برد و بعد با پست به سراسر ایران ارسال می‌شود. کد رهگیری پست در صفحه‌ی سفارشت نمایش داده می‌شود.</p></details>
+  <details><summary>می‌توانم عروسک یا نقاشی سفارشی بخواهم؟</summary><p>بله! از فرم تماس رنگ، اندازه و ایده‌ات را بنویس تا زمان و قیمت را اعلام کنیم.</p></details>
+  <details><summary>عروسک‌ها برای کودکان مناسب‌اند؟</summary><p>چشم‌ها ایمنی هستند، اما به‌خاطر قطعات کوچک برای کودکان زیر ۳ سال توصیه نمی‌شوند.</p></details>
+  <details><summary>سفارشم را چطور پیگیری کنم؟</summary><p>از صفحه‌ی <a href="{{ url_for('shop.track') }}" style="text-decoration:underline">پیگیری سفارش</a> با کد سفارش و شماره موبایلت.</p></details>
+</section>
+{% endblock %}

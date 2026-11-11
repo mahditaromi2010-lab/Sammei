@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% block title %}{{ title }} | {{ S.site_name_fa }}{% endblock %}
+{% block content %}
+<section class="night page-hero"><span class="stars"></span><div class="wrap"><h1>{{ title }}</h1></div></section>
+<div class="wrap error-page"><div class="big">{{ code }}</div><p>{{ text }}</p><a class="btn" href="{{ url_for('shop.home') }}">بازگشت به خانه</a></div>
+{% endblock %}
